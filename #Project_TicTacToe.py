@@ -1,128 +1,92 @@
-#Project Self Created
 from random import randrange
 
-def display_board(board):
-    print("+-----" *3,"+",sep="")
-    for row in range(3):
-        print("|     " * 3, "|",sep = "")
-        for col in range(3):
-            print("|  ",board[row][col],"  ",sep = "", end = "")
-        print("|")
-        print("|     " * 3, "|",sep = "")
-        print("+-----"*3,"+",sep="")
-    # The function accepts one parameter containing the board's current status
-    # and prints it out to the console.
+def DisplayBoard(board):
+	print("+-------" * 3,"+",sep="")
+	for row in range(3):
+		print("|       " * 3,"|",sep="")
+		for col in range(3):
+			print("|   " + str(board[row][col]) + "   ",end="")
+		print("|")
+		print("|       " * 3,"|",sep="")
+		print("+-------" * 3,"+",sep="")
+
+def EnterMove(board):
+	user_ip = False	# fake assumption - we need it to enter the loop
+	while not user_ip:
+		move = input("Enter your move: ") 
+		user_ip = len(move) == 1 and move != '0' and move.isnumeric() # is user's input valid?
+		if not user_ip:
+			print("Bad move - repeat your input!") # no, it isn't - do the input again
+			continue
+		move = int(move) - 1 	# cell's number from 0 to 8
+		row = move // 3 	# cell's row
+		col = move % 3		# cell's column
+		sign = board[row][col]	# check the selected square #7
+		user_ip = sign not in ['O','X'] #False
+		if not user_ip:	# it's occupied - to the input again
+			print("Field already occupied - repeat your input!")
+			continue
+	board[row][col] = 'O' 	# set '0' at the selected square
+
+def MakeListOfFreeFields(board):
+	free = []	# the list is empty initially
+	for row in range(3): # iterate through rows
+		for col in range(3): # iterate through columns
+			if board[row][col] not in ['O','X']: # is the cell free?
+				free.append((row,col)) # yes, it is - append new tuple to the list
+	return free
 
 
-def enter_move(board):
-    usr_ip = False
-    while not usr_ip:
-        user_move = input("Enter your Move ")
-        usr_ip = len(user_move) == 1 and user_move.isnumeric() and user_move != '0'
-        if not usr_ip:
-            print("Invalid option \nRetry")
-            continue
-        user_move = int(user_move) -1
-        row = user_move // 3
-        col = user_move % 3
-        sign = board[row][col]
-        usr_ip = sign not in ["O","X"]
-        if not usr_ip:
-            print("Field already occupied")
-            continue
-    board[row][col] = "O"
-    # The function accepts the board current status, asks the user about their move, 
-    # checks the input and updates the board according to the user's decision.
+def VictoryFor(board,sgn):
+	if sgn == "X":	# are we looking for X?
+		who = 'me'	# yes - it's computer's side
+	elif sgn == "O": # ... or for O?
+		who = 'you'	# yes - it's our side
+	else:
+		who = None	# we should not fall here!
+	cross1 = cross2 = True  # for diagonals
+	for rc in range(3):
+		if board[rc][0] == sgn and board[rc][1] == sgn and board[rc][2] == sgn:	# check row rc
+			return who
+		if board[0][rc] == sgn and board[1][rc] == sgn and board[2][rc] == sgn: # check column rc
+			return who
+		if board[rc][rc] != sgn: # check 1st diagonal
+			cross1 = False
+		if board[2 - rc][2 - rc] != sgn: # check 2nd diagonal
+			cross2 = False
+	if cross1 or cross2:
+		return who
+	return None
 
+def DrawMove(board):
+	free = MakeListOfFreeFields(board) # make a list of free fields
+	#cnt = len(free)
+	if len(free) > 0:	# if the list is not empty, choose a place for 'X' and set it
+		this = randrange(len(free))
+		row, col = free[this]
+		board[row][col] = 'X'
 
-def make_list_of_free_fields(board):
-    free = []
-    for i in range(len(board)):
-        for j in range(len(board)):
-            if board[i][j] not in ['X','O']:
-                free.append((i,j))
-    return free
-            
-    # The function browses the board and builds a list of all the free squares; 
-    # the list consists of tuples, while each tuple is a pair of row and column numbers.
-
-
-def victory_for(board, sign):
-    if sign == "O":
-        who = 'You'
-    elif sign == "X":
-        who = 'I'
-    else:
-        who = None
-    cross1 =cross2 = True
-    for i in range(3):
-        if board[i][0]==sign and board[i][1]==sign and board[i][2]==sign:
-            return who
-        if board[0][i]==sign and board[1][i]==sign and board[2][i]==sign:
-            return who
-        if board[i][i] != sign:
-            cross1 = False
-        if board[2-i][2-i] != sign:
-            cross2 = False
-    if cross1 or cross2:
-        return who
-    return None
-        
-    # The function analyzes the board status in order to check if 
-    # the player using 'O's or 'X's has won the game
-
-
-def draw_move(board):
-    free = make_list_of_free_fields(board)
-    if len(free)>0:
-        cp_move = randrange(len(free))
-        row,col = free[cp_move]
-        board[row][col] = "X"
-    # The function draws the computer's move and updates the board.
-
-
-gameBrd = [[3*j+i for i in range(1,4)] for j in range(3)]
-gameBrd[1][1] = "X"
-free = make_list_of_free_fields(gameBrd)
-
-humanTurn = True
-
+board = [ [3 * j + i  for i in range(1,4)] for j in range(3) ] # make an empty board
+board[1][1] = 'X' # set first 'X' in the middle
+free = MakeListOfFreeFields(board)
+humanturn = True # which turn is it now?
 while len(free):
-    display_board(gameBrd)
-    if humanTurn:
-        enter_move(gameBrd)
-        victor = victory_for(gameBrd,"O")
-    else:
-        draw_move(gameBrd)
-        victor = victory_for(gameBrd,"X")
-    if victor != None:
-        break
-    humanTurn = not humanTurn
-    free = make_list_of_free_fields(gameBrd)
+	DisplayBoard(board)
+	if humanturn:
+		EnterMove(board)
+		victor = VictoryFor(board,'O')
+	else:	
+		DrawMove(board)
+		victor = VictoryFor(board,'X')
+	if victor != None:
+		break
+	humanturn = not humanturn		
+	free = MakeListOfFreeFields(board)
 
-display_board(gameBrd)
-if victor == 'You':
-    print("You won")
-elif victor =='I':
-    print("I won")
+DisplayBoard(board)
+if victor == 'you':
+	print("You won!")
+elif victor == 'me':
+	print("I won")
 else:
-    print("Tie!")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	print("Tie!")
